@@ -48,6 +48,7 @@ const formSchema = z.object({
 
 const UserRegistration = () => {
     const [isOpen, setIsOpen] = useState(false);
+    const [currentStep, setCurrentStep] = useState(1);
     const router = useRouter();
 
     const form = useForm<z.infer<typeof formSchema>>({
@@ -65,11 +66,22 @@ const UserRegistration = () => {
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         try {
             // Make the request to the server
-            console.log("VALUES",values);
-            form.reset();
-            setIsOpen(false);
+            console.log("VALUES", values);
+
+            // Check if it's the last step, then submit the form
+            if (currentStep === 3) {        // at the end of the step
+                // Perform submit logic here
+                console.log("Form submitted");
+                form.reset();
+                setIsOpen(false);
+            } else {
+                // Move to the next step
+                setCurrentStep((prevStep) => prevStep + 1);
+            }
         } catch (error) {
             console.log("ERROR:", error);
+        } finally {
+            setCurrentStep(1);
         }
     }
     return (
@@ -81,9 +93,18 @@ const UserRegistration = () => {
             </DialogTrigger>
             <DialogContent className="max-md:py-8 md:p-8">
                 <DialogHeader className="mt-2">
-                    <DialogTitle>
-                        User Registration
-                    </DialogTitle>
+                    <div className="flex justify-between items-center">
+                        <DialogTitle>User Registration</DialogTitle>
+                        <div className="flex gap-2">
+                            {[1, 2, 3].map((step) => (
+                                <div
+                                    key={step}
+                                    className={`h-2 w-2 rounded-full mx-1 ${step <= currentStep ? "bg-blue-500" : "bg-gray-300"
+                                        }`}
+                                />
+                            ))}
+                        </div>
+                    </div>
                     <DialogDescription>
                         Add your details. Click continue when you&apos;re done.
                     </DialogDescription>
@@ -93,119 +114,155 @@ const UserRegistration = () => {
                         onSubmit={form.handleSubmit(onSubmit)}
                         className="w-full space-y-4 mt-4"
                     >
-                        <div className="flex flex-col gap-6">
-                            <FormField
-                                control={form.control}
-                                name="name"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel className="text-base">
-                                            Name
-                                        </FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                disabled={isSubmitting}
-                                                placeholder="Type your name"
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="options"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel className="text-base">
-                                            Options
-                                        </FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        {currentStep === 1 && (
+                            <div className="flex flex-col gap-6">
+                                <FormField
+                                    control={form.control}
+                                    name="name"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="text-base">
+                                                Name
+                                            </FormLabel>
                                             <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select the machine" />
-                                                </SelectTrigger>
+                                                <Input
+                                                    disabled={isSubmitting}
+                                                    placeholder="Type your name"
+                                                    {...field}
+                                                />
                                             </FormControl>
-                                            <SelectContent>
-                                                <SelectItem value='a'>Option 1</SelectItem>
-                                                <SelectItem value='b'>Option 2</SelectItem>
-                                                <SelectItem value='c'>Option 3</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <div className="w-full">
-                                <FormLabel className="text-base">
-                                    Date & Time
-                                </FormLabel>
-                                <div className="mt-2 w-full flex gap-4">
-                                    <div className="w-3/5">
-                                        <FormField
-                                            control={form.control}
-                                            name="date"
-                                            render={({ field }: { field: FieldValues['fields']['date'] }) => (
-                                                <FormItem>
-                                                    <FormControl>
-                                                        <Input
-                                                            type="date"
-                                                            disabled={isSubmitting}
-                                                            placeholder="e.g. '-17°C'"
-                                                            {...field}
-                                                            value={field.value instanceof Date ? field.value.toISOString().split('T')[0] : ''}
-                                                            onChange={(e) => {
-                                                                const selectedDate = new Date(e.target.value);
-                                                                form.setValue('date', selectedDate, { shouldValidate: true, shouldDirty: true });
-                                                            }}
-                                                        />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                    </div>
-                                    <div className="w-2/5">
-                                        <FormField
-                                            control={form.control}
-                                            name="time"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                        )}
+
+                        {currentStep === 2 && (
+                            <div className="flex flex-col gap-6">
+                                <FormField
+                                    control={form.control}
+                                    name="options"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel className="text-base">
+                                                Options
+                                            </FormLabel>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select the machine" />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    <SelectItem value='a'>Option 1</SelectItem>
+                                                    <SelectItem value='b'>Option 2</SelectItem>
+                                                    <SelectItem value='c'>Option 3</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                        )}
+
+                        {currentStep === 3 && (
+                            <div className="flex flex-col gap-6">
+                                <div className="w-full">
+                                    <FormLabel className="text-base">
+                                        Date & Time
+                                    </FormLabel>
+                                    <div className="mt-2 w-full flex gap-4">
+                                        <div className="w-3/5">
+                                            <FormField
+                                                control={form.control}
+                                                name="date"
+                                                render={({ field }: { field: FieldValues['fields']['date'] }) => (
+                                                    <FormItem>
                                                         <FormControl>
-                                                            <SelectTrigger>
-                                                                <SelectValue placeholder="Select time" />
-                                                            </SelectTrigger>
+                                                            <Input
+                                                                type="date"
+                                                                disabled={isSubmitting}
+                                                                placeholder="e.g. '-17°C'"
+                                                                {...field}
+                                                                value={field.value instanceof Date ? field.value.toISOString().split('T')[0] : ''}
+                                                                onChange={(e) => {
+                                                                    const selectedDate = new Date(e.target.value);
+                                                                    form.setValue('date', selectedDate, { shouldValidate: true, shouldDirty: true });
+                                                                }}
+                                                            />
                                                         </FormControl>
-                                                        <SelectContent>
-                                                            <SelectItem value="morning">Morning</SelectItem>
-                                                            <SelectItem value="noon">Noon</SelectItem>
-                                                            <SelectItem value="Evening">Evening</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </div>
+                                        <div className="w-2/5">
+                                            <FormField
+                                                control={form.control}
+                                                name="time"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                            <FormControl>
+                                                                <SelectTrigger>
+                                                                    <SelectValue placeholder="Select time" />
+                                                                </SelectTrigger>
+                                                            </FormControl>
+                                                            <SelectContent>
+                                                                <SelectItem value="morning">Morning</SelectItem>
+                                                                <SelectItem value="noon">Noon</SelectItem>
+                                                                <SelectItem value="Evening">Evening</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
                         <DialogFooter>
                             <div className="mt-4 mb-2 flex gap-4">
-                                <Button variant='secondary' className="flex gap-2 pr-5" onClick={() => setIsOpen(false)}>
-                                    Cancel
-                                </Button>
-                                <Button
-                                    type="submit"
-                                    disabled={!isValid || isSubmitting}
-                                    className="flex gap-2 pr-5"
-                                >
-                                    <Check className={cn("w-5 h-5", isSubmitting && "hidden")} />
-                                    <Loader2 className={cn("animate-spin w-5 h-5 hidden", isSubmitting && "flex")} />
-                                    Continue
-                                </Button>
+                                {currentStep === 1 && (
+                                    <Button variant='secondary' className="flex gap-2 pr-5" onClick={() => setIsOpen(false)}>
+                                        Cancel
+                                    </Button>
+                                )}
+
+                                {currentStep > 1 && (
+                                    <Button
+                                        variant="outline"
+                                        className="flex gap-2 pr-5"
+                                        onClick={() => setCurrentStep((prevStep) => prevStep - 1)}
+                                    >
+                                        Back
+                                    </Button>
+                                )}
+
+                                {currentStep < 3 && (
+                                    <Button
+                                        onClick={() => setCurrentStep((prevStep) => prevStep + 1)}
+                                        className="flex gap-2 pr-5"
+                                    >
+                                        Continue
+                                    </Button>
+                                )}
+
+                                {currentStep === 3 && (
+                                    <Button
+                                        type="submit"
+                                        disabled={!isValid || isSubmitting}
+                                        className="flex gap-2 pr-5"
+                                    >
+                                        <Check className={cn("w-5 h-5", isSubmitting && "hidden")} />
+                                        <Loader2 className={cn("animate-spin w-5 h-5 hidden", isSubmitting && "flex")} />
+                                        Submit
+                                    </Button>
+                                )}
                             </div>
                         </DialogFooter>
                     </form>
